@@ -9,6 +9,8 @@ import type { Sex } from '../types'
 import { toDateInput } from '../utils/dates'
 import { parseDecimal, parseInteger, round1 } from '../utils/number'
 
+const markUrl = `${import.meta.env.BASE_URL}favicon.svg`
+
 type Step = GuideStep & { form?: 'weight' }
 
 const steps: Step[] = [
@@ -127,7 +129,7 @@ function next() {
       </header>
       <div v-if="current.layout === 'intro'" class="onboard__intro">
         <div class="onboard__mark onboard__mark--logo" aria-hidden="true">
-          <img src="/favicon.svg" alt="" width="64" height="64" />
+          <img :src="markUrl" alt="" width="64" height="64" />
         </div>
         <div class="onboard__intro-copy">
           <h1 ref="heading" tabindex="-1">{{ current.title }}</h1>

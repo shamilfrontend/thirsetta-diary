@@ -14,6 +14,7 @@ import BottomSheet from '../components/BottomSheet.vue'
 import ConfirmDialog from '../components/ConfirmDialog.vue'
 import Icon from '../components/Icon.vue'
 
+const markUrl = `${import.meta.env.BASE_URL}favicon.svg`
 const injections = useInjectionsStore()
 const profile = useProfileStore()
 const weights = useWeightsStore()
@@ -146,7 +147,7 @@ function saveEdit() {
 <template>
   <div class="page page--nav stack">
     <header class="brand brand--mark">
-      <img class="brand__mark" src="/favicon.svg" alt="" width="40" height="40" />
+      <img class="brand__mark" :src="markUrl" alt="" width="40" height="40" />
       <div>
         <h1>Дневник Тирзетты</h1>
         <p class="muted">

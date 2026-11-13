@@ -2,8 +2,11 @@ import vue from '@vitejs/plugin-vue'
 import { defineConfig } from 'vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
+const base = process.env.BASE_PATH ?? '/'
+
 // https://vite.dev/config/
 export default defineConfig({
+  base,
   plugins: [
     vue(),
     VitePWA({
@@ -15,7 +18,7 @@ export default defineConfig({
         short_name: 'Тирзетта',
         lang: 'ru',
         display: 'standalone',
-        start_url: '/',
+        start_url: '.',
         background_color: '#0e1a2b',
         theme_color: '#0e1a2b',
         icons: [
