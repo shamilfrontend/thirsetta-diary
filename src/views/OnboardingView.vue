@@ -2,16 +2,19 @@
 import { computed, nextTick, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import Icon from '../components/Icon.vue'
+import PastDoseFields from '../components/PastDoseFields.vue'
 import { guideSteps, type GuideStep } from '../content/guide'
+import { useInjectionsStore } from '../stores/injections'
 import { useProfileStore } from '../stores/profile'
 import { useWeightsStore } from '../stores/weights'
 import type { Sex } from '../types'
-import { toDateInput } from '../utils/dates'
+import { isAfterToday, isDateInput, toDateInput } from '../utils/dates'
+import { earlierDoseIssue, type DoseMg } from '../utils/doses'
 import { parseDecimal, parseInteger, round1 } from '../utils/number'
 
 const markUrl = `${import.meta.env.BASE_URL}favicon.svg`
 
-type Step = GuideStep & { form?: 'weight' }
+type Step = GuideStep & { form?: 'weight' | 'history' }
 
 const steps: Step[] = [
   ...guideSteps,
@@ -24,6 +27,15 @@ const steps: Step[] = [
     note: '',
     form: 'weight',
   },
+  {
+    icon: 'calendar',
+    title: 'Уже были уколы',
+    lead: 'Если процедуры уже идут, запишем прошлые даты. Дальше в дневнике отмечаются только новые уколы.',
+    facts: [],
+    blocks: [],
+    note: '',
+    form: 'history',
+  },
 ]
 
 const WEIGHT_MIN = 25
@@ -35,6 +47,7 @@ const AGE_MAX = 100
 
 const router = useRouter()
 const profile = useProfileStore()
+const injections = useInjectionsStore()
 const weights = useWeightsStore()
 const step = ref(0)
 const heading = ref<HTMLHeadingElement | null>(null)
@@ -45,14 +58,22 @@ const heightCm = ref(profile.heightCm == null ? '' : profile.heightCm.toFixed(1)
 const sex = ref<Sex | null>(profile.sex)
 const age = ref(profile.age == null ? '' : String(profile.age))
 const formError = ref('')
-type ProfileField = 'sex' | 'age' | 'height' | 'weight' | 'goal'
+type ProfileField = 'sex' | 'age' | 'height' | 'weight' | 'goal' | 'prior' | 'date' | 'count' | 'dose' | 'early' | 'early-count'
 const invalidField = ref<ProfileField | ''>('')
+const prior = ref<'none' | 'some' | null>(null)
+const seedDate = ref(toDateInput(new Date()))
+const seedCount = ref('')
+const seedDose = ref<DoseMg | null>(profile.doseMg)
+const seedEarlier = ref(false)
+const seedEarlyDose = ref<DoseMg | null>(null)
+const seedEarlyCount = ref('')
 
 const current = computed(() => steps[step.value] ?? steps[0]!)
 const last = computed(() => step.value === steps.length - 1)
 
 watch(step, async () => {
   formError.value = ''
+  invalidField.value = ''
   await nextTick()
   scroller.value?.scrollTo({ top: 0 })
   heading.value?.focus()
@@ -60,6 +81,14 @@ watch(step, async () => {
 
 function back() {
   if (step.value > 0) step.value -= 1
+}
+
+function choosePrior(value: 'none' | 'some') {
+  prior.value = value
+  if (invalidField.value === 'prior') {
+    invalidField.value = ''
+    formError.value = ''
+  }
 }
 
 function reject(field: ProfileField, message: string) {
@@ -135,8 +164,44 @@ function saveProfile(): boolean {
   return true
 }
 
+function saveHistory(): boolean {
+  formError.value = ''
+  invalidField.value = ''
+  if (prior.value == null) {
+    reject('prior', 'Укажите, были ли уже уколы.')
+    return false
+  }
+  if (prior.value === 'none') return true
+  const now = new Date()
+  if (!isDateInput(seedDate.value)) {
+    reject('date', 'Укажите дату последнего укола.')
+    return false
+  }
+  if (isAfterToday(seedDate.value, now)) {
+    reject('date', 'Дата укола не может быть в будущем.')
+    return false
+  }
+  const count = parseInteger(seedCount.value)
+  if (count == null || count < 1 || count > 200) {
+    reject('count', 'Укажите, сколько уколов уже сделано: от 1 до 200.')
+    return false
+  }
+  const issue = earlierDoseIssue(count, seedDose.value, seedEarlier.value, seedEarlyDose.value, seedEarlyCount.value)
+  if (issue) {
+    reject(issue.field, issue.message)
+    return false
+  }
+  const first = parseInteger(seedEarlyCount.value)
+  const early = seedEarlier.value && count > 1 && seedEarlyDose.value != null && first != null
+    ? { mg: seedEarlyDose.value, count: first }
+    : null
+  injections.recordPast(seedDate.value, count, seedDose.value, now, early)
+  return true
+}
+
 function next() {
   if (current.value.form === 'weight' && !saveProfile()) return
+  if (current.value.form === 'history' && !saveHistory()) return
   if (!last.value) {
     step.value += 1
     return
@@ -221,6 +286,38 @@ function next() {
           <span>Желаемый вес, кг</span>
           <input v-model="goalKg" :class="{ 'is-invalid': invalidField === 'goal' }" :aria-invalid="invalidField === 'goal'" inputmode="decimal" autocomplete="off" enterkeyhint="done" />
         </label>
+      </form>
+      <form v-else-if="current.form === 'history'" class="onboard__form" @submit.prevent="next">
+        <div id="onboard-prior" class="field">
+          <span id="onboard-prior-label">Процедуры уже идут?</span>
+          <div class="onboard__sex" :class="{ 'is-invalid': invalidField === 'prior' }" role="radiogroup" aria-labelledby="onboard-prior-label">
+            <button type="button" role="radio" :aria-checked="prior === 'none'" :aria-invalid="invalidField === 'prior'" :class="{ active: prior === 'none' }" @click="choosePrior('none')">
+              Ещё не начинал
+            </button>
+            <button type="button" role="radio" :aria-checked="prior === 'some'" :aria-invalid="invalidField === 'prior'" :class="{ active: prior === 'some' }" @click="choosePrior('some')">
+              Уже делаю
+            </button>
+          </div>
+        </div>
+        <template v-if="prior === 'some'">
+          <label id="onboard-date" class="field">
+            <span>Когда был последний укол?</span>
+            <input v-model="seedDate" :class="{ 'is-invalid': invalidField === 'date' }" :aria-invalid="invalidField === 'date'" type="date" :max="toDateInput(new Date())" required />
+          </label>
+          <label id="onboard-count" class="field">
+            <span>Сколько уже сделано</span>
+            <input v-model="seedCount" :class="{ 'is-invalid': invalidField === 'count' }" :aria-invalid="invalidField === 'count'" inputmode="numeric" autocomplete="off" placeholder="6" />
+          </label>
+          <PastDoseFields
+            id-prefix="onboard"
+            v-model:dose="seedDose"
+            v-model:earlier="seedEarlier"
+            v-model:early-dose="seedEarlyDose"
+            v-model:early-count="seedEarlyCount"
+            :total-raw="seedCount"
+            :invalid="invalidField"
+          />
+        </template>
       </form>
     </div>
 

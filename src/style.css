@@ -191,9 +191,22 @@ ul {
   flex: none;
 }
 
+.brand__copy {
+  flex: 1;
+  min-width: 0;
+  container-type: inline-size;
+}
+
 .brand h1 {
   font-size: 32px;
   letter-spacing: -0.04em;
+}
+
+.brand--mark h1 {
+  /* 11.2cqi удерживает «Дневник Тирзетты» в одну строку рядом с маркой */
+  font-size: min(32px, 11.2cqi);
+  line-height: 1.15;
+  white-space: nowrap;
 }
 
 .brand .muted {
@@ -1151,6 +1164,29 @@ ul {
   color: #fff;
 }
 
+.dose-list.is-invalid button {
+  border-color: #ffb0a1;
+}
+
+.past-split {
+  width: 100%;
+  min-height: 52px;
+  padding: 8px 14px;
+  border: 1px dashed rgba(255, 255, 255, 0.16);
+  border-radius: 14px;
+  background: transparent;
+  color: var(--text);
+  font-weight: 700;
+}
+
+.past-split__back {
+  align-self: flex-start;
+}
+
+.field input.is-invalid {
+  border-color: #ffb0a1;
+}
+
 .dose-ink {
   font-weight: 750;
 }
@@ -1690,11 +1726,14 @@ ul {
 
 .onboard__sex button {
   min-height: 52px;
+  padding: 8px 10px;
   border: 1px solid transparent;
   border-radius: 14px;
   background: #121e30;
   color: var(--text);
+  font-size: 15px;
   font-weight: 700;
+  line-height: 1.2;
 }
 
 .onboard__sex button.active {

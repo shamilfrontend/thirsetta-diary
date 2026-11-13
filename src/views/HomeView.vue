@@ -7,7 +7,8 @@ import { useWeightsStore } from '../stores/weights'
 import { formatDayMonth, formatTime, isAfterToday, isDateInput, isMoreThanDaysAway, parseDateOnly, timeApart, toDateInput, WEEKDAY_SCHEDULE } from '../utils/dates'
 import { cycleRatio, formatDuration, heroNumbers, parseClock } from '../utils/dose'
 import { useProfileStore } from '../stores/profile'
-import { doseColor, formatDose } from '../utils/doses'
+import { DOSE_LEVELS, doseColor, earlierDoseIssue, formatDose, isDoseMg, type DoseMg } from '../utils/doses'
+import PastDoseFields from '../components/PastDoseFields.vue'
 import { plural } from '../utils/plural'
 import { parseInteger, round1, signedKg } from '../utils/number'
 import BottomSheet from '../components/BottomSheet.vue'
@@ -23,12 +24,17 @@ const now = useNow()
 const seedOpen = ref(false)
 const seedDate = ref(toDateInput(new Date()))
 const seedCount = ref('')
+const seedDose = ref<DoseMg | null>(profile.doseMg)
+const seedEarlier = ref(false)
+const seedEarlyDose = ref<DoseMg | null>(null)
+const seedEarlyCount = ref('')
 const seedError = ref('')
 const earlyOpen = ref(false)
 const pendingDelete = ref<Injection | null>(null)
 const editing = ref<Injection | null>(null)
 const editDate = ref('')
 const editTime = ref('')
+const editDose = ref<DoseMg | null>(null)
 const editError = ref('')
 
 const apart = computed(() => (injections.nextAt ? timeApart(injections.nextAt, now.value) : null))
@@ -73,6 +79,10 @@ const deleteText = computed(() => {
 function openSeed() {
   seedDate.value = toDateInput(new Date())
   seedCount.value = ''
+  seedDose.value = profile.doseMg
+  seedEarlier.value = false
+  seedEarlyDose.value = null
+  seedEarlyCount.value = ''
   seedError.value = ''
   seedOpen.value = true
 }
@@ -91,7 +101,16 @@ function saveSeed() {
     seedError.value = 'Укажите, сколько уколов уже сделано: от 1 до 200.'
     return
   }
-  injections.seed(seedDate.value, count, now.value)
+  const issue = earlierDoseIssue(count, seedDose.value, seedEarlier.value, seedEarlyDose.value, seedEarlyCount.value)
+  if (issue) {
+    seedError.value = issue.message
+    return
+  }
+  const first = parseInteger(seedEarlyCount.value)
+  const early = seedEarlier.value && count > 1 && seedEarlyDose.value != null && first != null
+    ? { mg: seedEarlyDose.value, count: first }
+    : null
+  injections.recordPast(seedDate.value, count, seedDose.value, now.value, early)
   seedOpen.value = false
 }
 
@@ -119,6 +138,7 @@ function openEdit(item: Injection) {
   editing.value = item
   editDate.value = toDateInput(date)
   editTime.value = formatTime(date)
+  editDose.value = item.mg != null && isDoseMg(item.mg) ? item.mg : null
   editError.value = ''
 }
 
@@ -139,7 +159,7 @@ function saveEdit() {
     editError.value = 'Дата и время не могут быть в будущем.'
     return
   }
-  injections.update(editing.value.id, at)
+  injections.update(editing.value.id, at, editDose.value)
   editing.value = null
 }
 </script>
@@ -148,7 +168,7 @@ function saveEdit() {
   <div class="page page--nav stack">
     <header class="brand brand--mark">
       <img class="brand__mark" :src="markUrl" alt="" width="64" height="64" />
-      <div>
+      <div class="brand__copy">
         <h1>Дневник Тирзетты</h1>
         <p class="muted">
           Тирзепатид
@@ -290,6 +310,14 @@ function saveEdit() {
           <span>Сколько уже сделано</span>
           <input v-model="seedCount" inputmode="numeric" autocomplete="off" placeholder="6" />
         </label>
+        <PastDoseFields
+          id-prefix="seed"
+          v-model:dose="seedDose"
+          v-model:earlier="seedEarlier"
+          v-model:early-dose="seedEarlyDose"
+          v-model:early-count="seedEarlyCount"
+          :total-raw="seedCount"
+        />
         <p v-if="seedError" class="error">{{ seedError }}</p>
         <button class="btn" type="submit">Сохранить</button>
       </form>
@@ -315,6 +343,23 @@ function saveEdit() {
           <span>Время</span>
           <input v-model="editTime" type="time" step="60" required />
         </label>
+        <div class="field">
+          <span id="edit-dose-label">Доза</span>
+          <div class="dose-list" role="radiogroup" aria-labelledby="edit-dose-label">
+            <button
+              v-for="mg in DOSE_LEVELS"
+              :key="mg"
+              type="button"
+              role="radio"
+              :aria-checked="editDose === mg"
+              :class="{ active: editDose === mg }"
+              :style="{ '--dose': doseColor(mg) }"
+              @click="editDose = mg"
+            >
+              {{ formatDose(mg) }}
+            </button>
+          </div>
+        </div>
         <p v-if="editError" class="error">{{ editError }}</p>
         <button class="btn" type="submit">Сохранить</button>
       </form>
