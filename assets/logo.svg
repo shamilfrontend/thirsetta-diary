@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="8.2 4.2 15.6 23.2">
+  <defs>
+    <linearGradient id="dose" x1="16" y1="5" x2="16" y2="27" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#e8453c"/>
+      <stop offset="0.5" stop-color="#e43786"/>
+      <stop offset="1" stop-color="#642d96"/>
+    </linearGradient>
+  </defs>
+  <path
+    fill="url(#dose)"
+    d="M10.6 5C8.8 10 12.2 13.5 10.2 18L11.4 26.8L16 21.4L20.6 26.8L21.8 18C19.8 13.5 23.2 10 21.4 5Z"
+  />
+</svg>
