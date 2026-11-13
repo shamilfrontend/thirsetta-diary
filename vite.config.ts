@@ -15,7 +15,7 @@ export default defineConfig({
       includeAssets: ['favicon.svg', 'apple-touch-icon.png'],
       manifest: {
         name: 'Дневник Тирзетты',
-        short_name: 'Тирзетта',
+        short_name: 'Дневник Тирзетты',
         lang: 'ru',
         display: 'standalone',
         start_url: '.',

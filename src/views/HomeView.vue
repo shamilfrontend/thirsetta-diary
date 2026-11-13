@@ -147,7 +147,7 @@ function saveEdit() {
 <template>
   <div class="page page--nav stack">
     <header class="brand brand--mark">
-      <img class="brand__mark" :src="markUrl" alt="" width="40" height="40" />
+      <img class="brand__mark" :src="markUrl" alt="" width="64" height="64" />
       <div>
         <h1>Дневник Тирзетты</h1>
         <p class="muted">

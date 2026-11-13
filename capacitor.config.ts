@@ -2,7 +2,7 @@ import type { CapacitorConfig } from '@capacitor/cli'
 
 const config: CapacitorConfig = {
   appId: 'app.tirzetta.diary',
-  appName: 'Тирзетта',
+  appName: 'Дневник Тирзетты',
   webDir: 'dist',
   backgroundColor: '#0e1a2b',
   android: {

@@ -186,8 +186,8 @@ ul {
 }
 
 .brand__mark {
-  width: 40px;
-  height: 40px;
+  width: 64px;
+  height: 64px;
   flex: none;
 }
 
@@ -1514,35 +1514,11 @@ ul {
   font-weight: 700;
 }
 
-.onboard__mark {
-  display: grid;
-  place-items: center;
-  flex: 0 0 auto;
-  width: 64px;
-  height: 64px;
-  min-height: 64px;
-  border-radius: 20px;
-  color: var(--accent);
-  background:
-    radial-gradient(120% 120% at 30% 0%, color-mix(in srgb, var(--accent) 34%, transparent), color-mix(in srgb, var(--accent) 8%, transparent) 42%, #1d3148 70%);
-  box-shadow: 0 18px 36px rgba(0, 0, 0, 0.18);
-}
-
-.onboard__mark--alert {
-  color: var(--up);
-  background:
-    radial-gradient(120% 120% at 30% 0%, rgba(255, 141, 114, 0.38), rgba(255, 141, 114, 0.08) 42%, #3a2a32 72%);
-}
-
-.onboard__mark--logo {
-  background: none;
-  box-shadow: none;
-}
-
-.onboard__mark--logo img {
+.onboard__logo {
   display: block;
-  width: 64px;
-  height: 64px;
+  width: 112px;
+  height: 112px;
+  margin-inline: auto;
 }
 
 .onboard h1 {
@@ -1574,6 +1550,10 @@ ul {
   display: flex;
   flex-direction: column;
   gap: 10px;
+}
+
+.onboard__intro-copy h1 {
+  text-align: center;
 }
 
 .onboard__sheet {
@@ -1721,6 +1701,15 @@ ul {
   border-color: color-mix(in srgb, var(--accent) 75%, transparent);
   background: color-mix(in srgb, var(--accent) 14%, transparent);
   color: var(--accent);
+}
+
+.onboard__form input.is-invalid,
+.onboard__sex.is-invalid button {
+  border-color: #ffb0a1;
+}
+
+.onboard__foot .error {
+  text-align: center;
 }
 
 .onboard__foot {
