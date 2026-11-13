@@ -14,6 +14,12 @@ const app = createApp(App)
 app.use(pinia)
 app.use(router)
 
+if (!Capacitor.isNativePlatform()) {
+  void import('virtual:pwa-register').then(({ registerSW }) => {
+    registerSW({ immediate: true })
+  })
+}
+
 if (Capacitor.isNativePlatform()) {
   void SystemBars.setStyle({ style: SystemBarsStyle.Dark })
   void CapApp.addListener('backButton', () => {

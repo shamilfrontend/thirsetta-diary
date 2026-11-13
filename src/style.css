@@ -1746,6 +1746,60 @@ ul {
   grid-template-columns: 1fr;
 }
 
+.install {
+  margin: calc(10px + env(safe-area-inset-top)) 16px 0;
+  padding: 16px;
+  background: linear-gradient(180deg, #1d2e46 0%, #18283d 100%);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: var(--radius);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.16);
+}
+
+.install__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.install__head strong {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.install__head .icon-btn {
+  width: 36px;
+  height: 36px;
+  margin-right: -8px;
+}
+
+.install ol {
+  margin: 8px 0 0;
+  padding-left: 18px;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.install .btn {
+  margin-top: 12px;
+}
+
+.shell:has(.install) {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+}
+
+.shell:has(.install) .page {
+  flex: 1;
+  min-height: 0;
+  padding-top: 14px;
+}
+
+.shell:has(.install) .page.onboard {
+  height: auto;
+}
+
 :focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
